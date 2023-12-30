@@ -4,6 +4,7 @@
   "description": "",
   "version": "1.0.0",
   "publisher": "JiankeYu",
+  "icon": "images/uts.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -20,7 +21,7 @@
         {
           "id": "uts-ihpc",
           "title": "UTS-iHPC",
-          "icon": "resources/uts.png"
+          "icon": "images/uts.png"
         }
       ]
     },
