@@ -1,5 +1,7 @@
 # UTS-iHPC-Connection-Wizard
 
+[VSCode Extension](https://marketplace.visualstudio.com/items?itemName=JiankeYu.uts-ihpc)
+
 ## Features
 
 Helping you easily use UTS iHPC on VS Code.
