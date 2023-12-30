@@ -1,7 +1,5 @@
 # UTS-iHPC-Connection-Wizard
 
-This is the README for your extension "uts-server". After writing up a brief description, we recommend including the following sections.
-
 ## Features
 
 Helping you easily use UTS iHPC on VS Code.

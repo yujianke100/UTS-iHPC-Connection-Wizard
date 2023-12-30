@@ -19,7 +19,7 @@
         {
           "id": "uts-ihpc",
           "title": "UTS-iHPC",
-          "icon": "resources/package-explorer.svg"
+          "icon": "resources/uts.svg"
         }
       ]
     },
@@ -72,5 +72,9 @@
     "webpack-cli": "^5.1.4",
     "@vscode/test-cli": "^0.0.4",
     "@vscode/test-electron": "^2.3.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yujianke100/UTS-iHPC-Connection-Wizard.git"
   }
 }
