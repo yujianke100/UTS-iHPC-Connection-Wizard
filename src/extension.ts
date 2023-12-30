@@ -160,7 +160,7 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
 			const cpu = parts[3].padEnd(cpuMemGpuMaxLength, ' ');
 			const mem = parts[4].padEnd(cpuMemGpuMaxLength, ' ');
 			const gpu = parts.length > 6 ? parts[5].padEnd(cpuMemGpuMaxLength, ' ') : 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
-			const gpuMem = parts.length > 7 ? parts[6].padEnd(cpuMemGpuMaxLength, ' ') : 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
+			const gpuMem = parts.length > 6 ? parts[6].padEnd(cpuMemGpuMaxLength, ' ') : 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
 			const users = parts.length > 7 ? parts.slice(7).join(', ') : '';
 	
 			return new ServerNode(`${name}`,`| C: ${cpu} | M: ${mem} | G: ${gpu} | GM: ${gpuMem} | ${users}`);
