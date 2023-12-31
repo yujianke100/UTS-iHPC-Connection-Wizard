@@ -2,7 +2,7 @@
   "name": "uts-ihpc",
   "displayName": "UTS-iHPC",
   "description": "",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "JiankeYu",
   "icon": "images/uts.png",
   "engines": {
@@ -38,16 +38,45 @@
         "command": "uts-ihpc.refresh",
         "title": "Refresh UTS iHPC List",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "uts-ihpc.openSettings",
+        "title": "Set UTS iHPC Account",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "uts-ihpc.configureSsh",
+        "title": "Add Node to SSH Config"
+      },
+      {
+        "command": "uts-ihpc.connectSsh",
+        "title": "Connect via SSH"
       }
     ],
     "menus": {
-        "view/title": [
-            {
-                "when": "view == uts-ihpc-list",
-                "command": "uts-ihpc.refresh",
-                "group": "navigation"
-            }
-        ]
+      "view/title": [
+        {
+          "when": "view == uts-ihpc-list",
+          "command": "uts-ihpc.refresh",
+          "group": "navigation"
+        },
+        {
+          "command": "uts-ihpc.openSettings",
+          "group": "navigation",
+          "when": "view == uts-ihpc-list"
+        }
+      ],
+      "view/item/context": [
+        {
+          "when": "view == uts-ihpc-list && viewItem == ServerNode",
+          "command": "uts-ihpc.configureSsh"
+        },
+        {
+          "when": "view == uts-ihpc-list && viewItem == ServerNode",
+          "command": "uts-ihpc.connectSsh",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
