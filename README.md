@@ -28,6 +28,7 @@ If you do not have an account yet, please apply for one at [this page](https://i
 ### 1.0.1
 
 Add the function of one click connection to SSH
+
 Add display of username
 
 ### 1.0.0
