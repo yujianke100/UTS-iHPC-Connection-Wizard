@@ -156,13 +156,40 @@ async function checkAndCompleteUtsConfig() {
     }
 }
 
+function execPromise(command: string) {
+    return new Promise((resolve, reject) => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error('Exec error:', error);
+                reject(error);
+                return;
+            }
+            if (stderr) {
+                console.error('Exec stderr:', stderr);
+                reject(new Error(stderr));
+                return;
+            }
+            if (typeof stdout !== 'string') {
+                console.error('Unexpected stdout type:', typeof stdout);
+                reject(new Error('Unexpected stdout type'));
+                return;
+            }
+            resolve(stdout.trim());
+        });
+    });
+}
 
 async function configureSsh(nodeName: string) {
-    console.log('Configuring SSH for', nodeName)
+    console.log('Configuring SSH for', nodeName);
+    
     const sshConfigPath = path.join(os.homedir(), '.ssh', 'config');
     try {
+        const hostnameOutput = await execPromise('hostname');
+        const hostname = hostnameOutput as string;
+        const isIhpcHost = hostname.endsWith('ihpc.uts.edu.au');
+
         const configContent = await fs.promises.readFile(sshConfigPath, 'utf8');
-        const updatedContent = updateSshConfig(configContent, nodeName);
+        const updatedContent = updateSshConfig(configContent, nodeName, isIhpcHost);
         await fs.promises.writeFile(sshConfigPath, updatedContent);
         vscode.window.showInformationMessage(`SSH configuration updated for ${nodeName}`);
     } catch (error: any) {
@@ -170,7 +197,7 @@ async function configureSsh(nodeName: string) {
         vscode.window.showErrorMessage(`Failed to update SSH configuration: ${error.message}`);
     }
 }
-function updateSshConfig(config: string, nodeName: string): string {
+function updateSshConfig(config: string, nodeName: string, isIhpcHost: boolean): string {
     const lines = config.split('\n');
 
     const utsUserMatch = config.match(/Host uts\n\s*HostName [^\n]+\n\s*User ([^\n]+)/);
@@ -179,7 +206,12 @@ function updateSshConfig(config: string, nodeName: string): string {
         checkAndCompleteUtsConfig();
     }
 
-    const newNodeConfig = `Host ${nodeName}\n  HostName ${nodeName}\n  User ${utsUser}\n  ProxyJump uts`;
+    let newNodeConfig = `Host ${nodeName}\n  HostName ${nodeName}\n  User ${utsUser}`;
+    
+    
+    if(isIhpcHost) {
+        newNodeConfig += "\n  ProxyJump uts";
+    } 
 
     const hostIndex = lines.findIndex(line => line.startsWith(`Host ${nodeName}`));
     if (hostIndex !== -1) {
