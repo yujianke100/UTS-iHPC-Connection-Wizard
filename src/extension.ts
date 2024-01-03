@@ -4,29 +4,41 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
+let globalIsIhpcHost: boolean;
+
 const utsUserStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
 utsUserStatusBarItem.command = 'uts-ihpc.openSettings';
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Activating UTS Server extension.');
-    try {
-        await checkAndCompleteUtsConfig();
-    } catch (error) {
-        return;
+    const hostnameOutput = await execPromise('hostname');
+    const hostname = hostnameOutput as string;
+    const isIhpcHost = hostname.endsWith('ihpc.uts.edu.au');
+    
+    vscode.commands.executeCommand('setContext', 'isIhpcHost', isIhpcHost);
+    globalIsIhpcHost = isIhpcHost
+    if(!isIhpcHost) {
+        try {
+            await checkAndCompleteUtsConfig();
+        } catch (error) {
+            return;
+        }
     }
     const serverProvider = new ServerProvider();
     vscode.window.registerTreeDataProvider('uts-ihpc-list', serverProvider);
     context.subscriptions.push(vscode.commands.registerCommand('uts-ihpc.refresh', () => {
         serverProvider.refresh();
     }));
+
     context.subscriptions.push(vscode.commands.registerCommand('uts-ihpc.configureSsh', async (node: ServerNode) => {
         if (node && node.name) {
-            console.log('Configuring SSH for', node.name.trim());
             await configureSsh(node.name.trim());
         } else {
             console.log('No valid node provided for SSH configuration');
         }
     }));
+    
+    
     context.subscriptions.push(vscode.commands.registerCommand('uts-ihpc.openSettings', openSettings));
 
     
@@ -34,18 +46,22 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const treeView = vscode.window.createTreeView('uts-ihpc-list', { treeDataProvider: new ServerProvider() });
 
-    treeView.onDidChangeVisibility(e => {
-        if (e.visible) {
-            updateStatusBarItem();
-        } else {
-            utsUserStatusBarItem.hide();
-        }
-    });
+    if(!isIhpcHost) {
+        treeView.onDidChangeVisibility(e => {
+            if (e.visible) {
+                updateStatusBarItem();
+            } else {
+                utsUserStatusBarItem.hide();
+            }
+        });
+    }
 
     context.subscriptions.push(vscode.commands.registerCommand('uts-ihpc.connectSsh', async (node: ServerNode) => {
         if (node && node.name) {
-            await configureSsh(node.name.trim());
-
+            if(!isIhpcHost) {
+                await configureSsh(node.name.trim());
+            }
+            
             const terminal = vscode.window.createTerminal(`SSH: ${node.name.trim()}`);
             terminal.show();
 
@@ -58,7 +74,7 @@ async function updateStatusBarItem() {
     const sshConfigPath = path.join(os.homedir(), '.ssh', 'config');
     try {
         const configContent = await fs.promises.readFile(sshConfigPath, 'utf8');
-        const utsUserMatch = configContent.match(/Host uts\n\s*HostName [^\n]+\n\s*User (\S+)/);
+        const utsUserMatch = configContent.match(/^\s*Host uts\n\s*HostName [^\n]+\n\s*User ([^\n]+)/m);
         const utsUser = utsUserMatch ? utsUserMatch[1] : 'Not Set';
 
         utsUserStatusBarItem.text = `UTS User: ${utsUser}`;
@@ -108,8 +124,10 @@ async function updateUtsUsernameInSshConfig() {
         try {
             await fs.promises.writeFile(sshConfigPath, configContent);
             vscode.window.showInformationMessage('SSH configuration for UTS iHPC updated successfully.');
-            updateStatusBarItem();
-            //refresh tree view
+            if(!globalIsIhpcHost){
+                updateStatusBarItem();
+            }
+            
             vscode.commands.executeCommand('uts-ihpc.refresh');
         } catch (writeError: any) {
             vscode.window.showErrorMessage(`Failed to write SSH configuration: ${writeError.message}`);
@@ -184,12 +202,8 @@ async function configureSsh(nodeName: string) {
     
     const sshConfigPath = path.join(os.homedir(), '.ssh', 'config');
     try {
-        const hostnameOutput = await execPromise('hostname');
-        const hostname = hostnameOutput as string;
-        const isIhpcHost = hostname.endsWith('ihpc.uts.edu.au');
-
         const configContent = await fs.promises.readFile(sshConfigPath, 'utf8');
-        const updatedContent = updateSshConfig(configContent, nodeName, isIhpcHost);
+        const updatedContent = updateSshConfig(configContent, nodeName);
         await fs.promises.writeFile(sshConfigPath, updatedContent);
         vscode.window.showInformationMessage(`SSH configuration updated for ${nodeName}`);
     } catch (error: any) {
@@ -197,27 +211,25 @@ async function configureSsh(nodeName: string) {
         vscode.window.showErrorMessage(`Failed to update SSH configuration: ${error.message}`);
     }
 }
-function updateSshConfig(config: string, nodeName: string, isIhpcHost: boolean): string {
+function updateSshConfig(config: string, nodeName: string): string {
+    console.log('Updating SSH config for', nodeName);
     const lines = config.split('\n');
 
-    const utsUserMatch = config.match(/Host uts\n\s*HostName [^\n]+\n\s*User ([^\n]+)/);
+    const utsUserMatch = config.match(/^\s*Host uts\n\s*HostName [^\n]+\n\s*User ([^\n]+)/m);
     const utsUser = utsUserMatch ? utsUserMatch[1] : '';
     if (utsUser === '') {
         checkAndCompleteUtsConfig();
     }
 
-    let newNodeConfig = `Host ${nodeName}\n  HostName ${nodeName}\n  User ${utsUser}`;
+    let newNodeConfig = `Host ${nodeName}\n  HostName ${nodeName}\n  User ${utsUser}\n  ProxyJump uts\n`;
     
-    
-    if(isIhpcHost) {
-        newNodeConfig += "\n  ProxyJump uts";
-    } 
 
-    const hostIndex = lines.findIndex(line => line.startsWith(`Host ${nodeName}`));
+    const hostRegex = new RegExp(`^\\s*Host ${nodeName}`);
+    const hostIndex = lines.findIndex(line => hostRegex.test(line));
     if (hostIndex !== -1) {
         let userLineUpdated = false;
         for (let i = hostIndex + 1; i < lines.length && !lines[i].startsWith('Host '); i++) {
-            if (lines[i].startsWith('  User ')) {
+            if (lines[i].startsWith('^\\s*User ')) {
                 lines[i] = `  User ${utsUser}`;
                 userLineUpdated = true;
                 break;
@@ -234,34 +246,34 @@ function updateSshConfig(config: string, nodeName: string, isIhpcHost: boolean):
 
     const nodeOrder = ['jupiter', 'mars', 'mercury', 'neptune', 'saturn', 'venus', 'uts'];
 
-    const hostLines = lines.filter(line => line.startsWith('Host '));
+    const insertHostRegex = /^\s*Host /;
+    const hostLines = lines.filter(line => insertHostRegex.test(line));
 
     function getNodeOrderIndex(hostLine: string): number {
-        const hostName = hostLine.split(' ')[1];
+        const trimmedLine = hostLine.trim();
+        const hostName = trimmedLine.split(' ')[1];
         const prefixMatch = hostName.match(/^[a-zA-Z]+/);
         const prefix = prefixMatch ? prefixMatch[0] : '';
         const index = nodeOrder.indexOf(prefix);
         return index !== -1 ? index : nodeOrder.length;
     }
+    
     function getNodeNumber(hostLine: string): number {
-        const numberMatch = hostLine.match(/[0-9]+/);
+        const numberMatch = hostLine.match(/[0-9]+$/);
         return numberMatch ? parseInt(numberMatch[0], 10) : 0;
     }
-
+    
     const insertIndex = hostLines.findIndex(hostLine => {
         const orderIndex = getNodeOrderIndex(hostLine);
-        const newOrderIndex = getNodeOrderIndex(`Host ${nodeName}`);
+        const newOrderIndex = getNodeOrderIndex(`/\s*Host ${nodeName}`);
         if (orderIndex !== newOrderIndex) {
             return orderIndex > newOrderIndex;
         }
     
         const existingNodeNumber = getNodeNumber(hostLine);
         const newNodeNumber = getNodeNumber(`Host ${nodeName}`);
-        if (existingNodeNumber !== newNodeNumber) {
-            return existingNodeNumber > newNodeNumber;
-        }
-    
-        return hostLine > `Host ${nodeName}`;
+        
+        return existingNodeNumber > newNodeNumber;
     });
 
     if (insertIndex !== -1) {
@@ -287,7 +299,12 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
 
     getChildren(): Thenable<ServerNode[]> {
         return new Promise((resolve, reject) => {
-            const command = 'ssh uts "cnode | grep yes"';
+            let command;
+            if(!globalIsIhpcHost) {
+                command = 'ssh uts "cnode | grep yes"';
+            } else {
+                command = 'cnode | grep yes';
+            }
             const timeout = 10000;
 
             const child = exec(command, { timeout: timeout }, (error, stdout, stderr) => {
@@ -335,8 +352,9 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
 }
 
 class ServerNode extends vscode.TreeItem {
-    constructor(public readonly name: string, public readonly description: string) {
+    constructor( public readonly name: string, public readonly description: string) {
         super(name, vscode.TreeItemCollapsibleState.None);
+
         this.contextValue = 'ServerNode';
         this.tooltip = `${this.name} - ${this.description}`;
         this.command = {
@@ -344,6 +362,7 @@ class ServerNode extends vscode.TreeItem {
             command: "uts-ihpc.configureSsh",
             arguments: [this.name.trim()]
         };
+        
 
     }
 }

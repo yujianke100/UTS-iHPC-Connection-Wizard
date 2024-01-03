@@ -63,12 +63,12 @@
         {
           "command": "uts-ihpc.openSettings",
           "group": "navigation",
-          "when": "view == uts-ihpc-list"
+          "when": "view == uts-ihpc-list && !isIhpcHost"
         }
       ],
       "view/item/context": [
         {
-          "when": "view == uts-ihpc-list && viewItem == ServerNode",
+          "when": "view == uts-ihpc-list && viewItem == ServerNode && !isIhpcHost",
           "command": "uts-ihpc.configureSsh"
         },
         {

@@ -25,6 +25,10 @@ If you do not have an account yet, please apply for one at [this page](https://i
 
 ## Release Notes
 
+### 1.0.2
+
+Adapt to use this extension on nodes
+
 ### 1.0.1
 
 Add the function of one click connection to SSH
