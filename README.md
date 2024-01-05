@@ -4,11 +4,13 @@
 
 ## Features
 
-Helping you easily use UTS iHPC on VS Code.
+This extension is designed to facilitate the use of UTS iHPC within VS Code.
 
-1. **Check Node Status**: View live status of available UTS iHPC nodes.
-2. **One-Click SSH Setup**: Add nodes to Remote-SSH quickly.
-
+1. **Check Node Status**: View the live status of UTS iHPC nodes.
+2. **Context Menu Features**:
+   - **Open Terminal and SSH Connect to Node**: Quickly open a new terminal and establish an SSH connection to a node via the right-click context menu.
+   - **Add Node Information to Remote-SSH**: In a local environment, you can swiftly add node information to the Remote-SSH configuration.
+3. **Node Environment Compatibility**: When using this extension on a node, you can view node statuses and open terminals for SSH connections. However, in a remote node environment, the ability to add node information to Remote-SSH is not available due to the deactivation of VS Code's Remote-SSH feature.
 
 ## Requirements
 
@@ -22,22 +24,6 @@ Helping you easily use UTS iHPC on VS Code.
 The first time you open the extension, you will be prompted to enter your UTS iHPC username. 
 If you do not have an account yet, please apply for one at [this page](https://ihpc.research.uts.edu.au/login/).
 
-
-## Release Notes
-
-### 1.0.2
-
-Adapt to use this extension on nodes
-
-### 1.0.1
-
-Add the function of one click connection to SSH
-
-Add display of username
-
-### 1.0.0
-
-Publish the extension.
 
 ---
 

@@ -44,7 +44,8 @@ export async function activate(context: vscode.ExtensionContext) {
     
     context.subscriptions.push(utsUserStatusBarItem);
 
-    const treeView = vscode.window.createTreeView('uts-ihpc-list', { treeDataProvider: new ServerProvider() });
+    // const treeView = vscode.window.createTreeView('uts-ihpc-list', { treeDataProvider: new ServerProvider() });
+    const treeView = vscode.window.createTreeView('uts-ihpc-list', { treeDataProvider: serverProvider });
 
     if(!isIhpcHost) {
         treeView.onDidChangeVisibility(e => {
@@ -292,7 +293,6 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
     refresh(): void {
         this._onDidChangeTreeData.fire(undefined);
     }
-
     getTreeItem(element: ServerNode): vscode.TreeItem {
         return element;
     }
@@ -306,7 +306,7 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
                 command = 'cnode | grep yes';
             }
             const timeout = 10000;
-
+    
             const child = exec(command, { timeout: timeout }, (error, stdout, stderr) => {
                 if (error) {
                     console.error('Error fetching data:', stderr);
@@ -316,8 +316,7 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
                 console.log('Data fetched:', stdout);
                 resolve(this.parseServerOutput(stdout));
             });
-
-
+    
             setTimeout(() => {
                 if (child.exitCode === null) {
                     child.kill();
@@ -326,6 +325,7 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
             }, timeout);
         });
     }
+    
 
     parseServerOutput(output: string): ServerNode[] {
         const nameMaxLength = 'mercury28'.length;
