@@ -250,13 +250,20 @@ function updateSshConfig(config: string, nodeName: string): string {
     const insertHostRegex = /^\s*Host /;
     const hostLines = lines.filter(line => insertHostRegex.test(line));
 
+    // function getNodeOrderIndex(hostLine: string): number {
+    //     const trimmedLine = hostLine.trim();
+    //     const hostName = trimmedLine.split(' ')[1];
+    //     const prefixMatch = hostName.match(/^[a-zA-Z]+/);
+    //     const prefix = prefixMatch ? prefixMatch[0] : '';
+    //     const index = nodeOrder.indexOf(prefix);
+    //     return index !== -1 ? index : nodeOrder.length;
+    // }
     function getNodeOrderIndex(hostLine: string): number {
         const trimmedLine = hostLine.trim();
         const hostName = trimmedLine.split(' ')[1];
         const prefixMatch = hostName.match(/^[a-zA-Z]+/);
         const prefix = prefixMatch ? prefixMatch[0] : '';
-        const index = nodeOrder.indexOf(prefix);
-        return index !== -1 ? index : nodeOrder.length;
+        return nodeOrder.includes(prefix) ? nodeOrder.indexOf(prefix) : -1;
     }
     
     function getNodeNumber(hostLine: string): number {
@@ -266,6 +273,9 @@ function updateSshConfig(config: string, nodeName: string): string {
     
     const insertIndex = hostLines.findIndex(hostLine => {
         const orderIndex = getNodeOrderIndex(hostLine);
+        if (orderIndex === -1) {
+            return false;
+        }
         const newOrderIndex = getNodeOrderIndex(`/\s*Host ${nodeName}`);
         if (orderIndex !== newOrderIndex) {
             return orderIndex > newOrderIndex;
