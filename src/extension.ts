@@ -311,7 +311,7 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
         return new Promise((resolve, reject) => {
             let command;
             if(!globalIsIhpcHost) {
-                command = 'ssh uts "cnode | grep yes"';
+                command = 'ssh -o StrictHostKeyChecking=no uts "cnode | grep yes"';
             } else {
                 command = 'cnode | grep yes';
             }

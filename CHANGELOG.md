@@ -4,6 +4,10 @@ All notable changes to the "UTS-iHPC-Connection-Wizard" extension will be docume
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.5] - 2024-01-25
+
+- Fixed SSH connection issue: now the plugin automatically accepts SSH keys when connecting to a remote server for the first time
+
 ## [1.0.4] - 2024-01-24
 
 - Fixed a bug about adding a node to the configuration.
