@@ -2,7 +2,7 @@
   "name": "uts-ihpc",
   "displayName": "UTS-iHPC",
   "description": "",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "JiankeYu",
   "icon": "images/uts.png",
   "engines": {

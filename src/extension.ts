@@ -346,19 +346,25 @@ class ServerProvider implements vscode.TreeDataProvider<ServerNode> {
             if (line.startsWith('*') || line.trim() === '') return null;
             const parts = line.trim().split(/\s+/);
             if (parts.length < 6) return null;
-
+        
             const name = parts[0].padEnd(nameMaxLength, ' ');
             const cpu = parts[3].padEnd(cpuMemGpuMaxLength, ' ');
             const mem = parts[4].padEnd(cpuMemGpuMaxLength, ' ');
-            const gpu = parts.length > 6 ? parts[5].padEnd(cpuMemGpuMaxLength, ' ') : 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
-            const gpuMem = parts.length > 6 ? parts[6].padEnd(cpuMemGpuMaxLength, ' ') : 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
+        
+            let gpu: string;
+            let gpuMem: string;
             let users: string;
-            if (gpu === 'N/A') {
+        
+            if (parts[5].endsWith('%')) {
+                gpu = parts[5].padEnd(cpuMemGpuMaxLength, ' ');
+                gpuMem = parts.length > 6 ? parts[6].padEnd(cpuMemGpuMaxLength, ' ') : 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
                 users = parts.length > 7 ? parts.slice(7).join(', ') : '';
             } else {
-                users = parts.length > 6 ? parts.slice(6).join(', ') : '';
+                gpu = 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
+                gpuMem = 'N/A'.padEnd(cpuMemGpuMaxLength, ' ');
+                users = parts.length > 5 ? parts.slice(5).join(', ') : '';
             }
-
+        
             return new ServerNode(`${name}`, `| C: ${cpu} | M: ${mem} | G: ${gpu} | GM: ${gpuMem} | ${users}`);
         }).filter(node => node !== null) as ServerNode[];
     }
