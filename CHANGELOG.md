@@ -4,6 +4,10 @@ All notable changes to the "UTS-iHPC-Connection-Wizard" extension will be docume
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.9] - 2024-06-17
+
+- Optimize SSH configuration update strategy
+
 ## [1.0.8] - 2024-05-19
 
 - Adaptation of CPU node information display
